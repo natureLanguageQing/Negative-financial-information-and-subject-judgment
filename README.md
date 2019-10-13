@@ -5,15 +5,14 @@ Negative financial information and subject judgment baseline
 
 #交流群
 点击链接加入群聊【中文baselines】：https://jq.qq.com/?_wv=1027&k=5CB5RCn
-点击链接加入群聊【52lm.xyz分时租赁云AI计】：https://jq.qq.com/?_wv=1027&k=5peHKIA
+点击链接加入群聊【52lm.xyz分时租赁云GPU】：https://jq.qq.com/?_wv=1027&k=5peHKIA
 
 # 训练过程
 
 Epoch 1/32
-2019-10-13 16:10:08.172986: I tensorflow/stream_executor/platform/default/dso_loader.cc:42] Successfully opened dynamic library libcublas.so.10.0
 500/500 [==============================] - 221s 443ms/step - loss: 0.3253 - acc: 0.8483 - val_loss: 0.1379 - val_acc: 0.9510
 
-Epoch 00001: val_acc improved from -inf to 0.95095, saving model to model_files/bert/bert.h5
+Epoch 00001: val_acc improved from 0.0 to 0.95095, saving model to model_files/bert/bert.h5
 Epoch 2/32
 500/500 [==============================] - 196s 391ms/step - loss: 0.1216 - acc: 0.9552 - val_loss: 0.1082 - val_acc: 0.9620
 
