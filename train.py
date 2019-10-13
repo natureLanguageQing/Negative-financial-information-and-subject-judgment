@@ -4,22 +4,19 @@ import codecs
 import os
 
 import keras_radam as Radam
-import numpy as np
 import pandas as pd
 import tensorflow as tf
-from keras import Sequential
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.layers import *
 from keras.models import Model, load_model
-from keras.utils import multi_gpu_model
 from keras_bert import load_trained_model_from_checkpoint, Tokenizer, get_custom_objects
 
-CONFIG_PATH = 'roeberta_zh_L-24_H-1024_A-16/bert_config_large.json'
-CHECKPOINT_PATH = 'roeberta_zh_L-24_H-1024_A-16/roberta_zh_large_model.ckpt'
-DICT_PATH = 'roeberta_zh_L-24_H-1024_A-16/vocab.txt'
+CONFIG_PATH = 'roberta-large/bert_config_large.json'
+CHECKPOINT_PATH = 'roberta-large/roberta_zh_large_model.ckpt'
+DICT_PATH = 'roberta-large/vocab.txt'
 
 CONFIG = {
-    'max_len': 64,
+    'max_len': 128,
     'batch_size': 8,
     'epochs': 32,
     'use_multiprocessing': True,
@@ -42,11 +39,9 @@ def split_train_test(data, X_name, y_name, train_size=0.85, test_size=None):
         train_size = 1 - test_size
     for i in range(data.shape[0]):
         if i % 100 < train_size * 100:
-            message = X_name.split(",")
-            train_data.append([str(data.loc[i][message[0]]) + str(data.loc[i][message[1]]), data.loc[i][y_name]])
+            train_data.append([str(data.loc[i][X_name]), data.loc[i][y_name]])
         else:
-            message = X_name.split(",")
-            test_data.append([str(data.loc[i][message[0]]) + str(data.loc[i][message[1]]), data.loc[i][y_name]])
+            test_data.append([str(data.loc[i][X_name]), data.loc[i][y_name]])
     return np.array(train_data), np.array(test_data)
 
 
@@ -93,6 +88,11 @@ def seq_padding(X, padding=0):
 
 
 def check(c):
+    """
+    判断是不是中文，只处理中文数据，其他数据不进行seq_padding
+    :param c:
+    :return:
+    """
     return '\u4e00' <= c <= '\u9fa5'
 
 
@@ -224,20 +224,23 @@ class BertClassify:
 
 
 if __name__ == "__main__":
-    data = pd.read_csv(os.path.join('car-remark/train.csv'), encoding='utf-8')
-    test_data = pd.read_csv(os.path.join('car-remark/test.csv'), encoding='utf-8')
-    train_data, valid_data = split_train_test(data, 'title,content', 'flag', train_size=0.8)
+    data = pd.read_csv(os.path.join('data/Train_Data(1).csv'), encoding='utf-8')
+    test_data = pd.read_csv(os.path.join('data/Test_Data(1).csv'), encoding='utf-8')
+    train_data, valid_data = split_train_test(data, 'text', 'negative', train_size=0.8)
     predict_test = []
-    for i, j in zip(test_data['title'], test_data['content']):
-        if i is not None and j is not None:
-            predict_test.append(str(i) + str(j))
+    for i in test_data['text']:
+        if i is not None:
+            predict_test.append(str(i))
     # # # bert
     model = BertClassify(train=True)
     model.train(train_data, valid_data)
 
     predict_results = model.predict(predict_test)
     with open(os.path.join('data/bert/food-predict.txt'), 'w') as f:
-        f.write("id,flag\n")
+        f.write("id,negative,key_entity\n")
         for i in range(test_data.shape[0]):
             label = 1 if predict_results[i][0] > 0.5 else 0
-            f.write(test_data.id[i] + ',' + str(label) + '\n')
+            if label == 1:
+                f.write(test_data.id[i] + ',' + str(label) + ',' + test_data.entity[i] + '\n')
+            else:
+                f.write(test_data.id[i] + ',' + str(label) + '\n')
